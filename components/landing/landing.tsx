@@ -80,9 +80,6 @@ export function Landing({ trips }: { trips: TripCard[] }) {
             >
               Entrar
             </Link>
-            <Link href="/rrpp/solicitar" className={cn(buttonVariants())}>
-              Soy RRPP
-            </Link>
           </div>
         </nav>
       </header>
