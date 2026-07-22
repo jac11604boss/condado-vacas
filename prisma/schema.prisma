@@ -1,0 +1,201 @@
+// CONDADO +VACAS — Schema Prisma (PostgreSQL / Supabase)
+// Generador Prisma 7: salida TypeScript en lib/generated/prisma
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CLIENT
+  RRPP
+  ADMIN
+}
+
+enum RrppStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  DISABLED
+}
+
+enum EventSource {
+  SCRAPED
+  CUSTOM
+}
+
+enum TripStatus {
+  OPEN
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum BusStatus {
+  OPEN
+  FULL
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum BookingStatus {
+  PENDING
+  PAID
+  REFUNDED
+  CANCELLED
+  CHECKED_IN
+}
+
+enum PayoutStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+model User {
+  id          String       @id @default(cuid())
+  supabaseId  String       @unique // id de Supabase Auth
+  email       String       @unique
+  name        String?
+  phone       String?
+  avatarUrl   String?
+  role        Role         @default(CLIENT)
+  rrppProfile RrppProfile?
+  bookings    Booking[]
+  customEvents Event[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model RrppProfile {
+  id              String       @id @default(cuid())
+  userId          String       @unique
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status          RrppStatus   @default(PENDING)
+  code            String       @unique // código público para enlaces, p.ej. "maria-lopes"
+  instagram       String? // @handle, para verificar "popularidad"
+  tiktok          String?
+  city            String? // ciudad base del RRPP
+  stripeAccountId String? // Stripe Connect Express
+  bio             String?
+  trips           Trip[]
+  payouts         Payout[]
+  appliedAt       DateTime     @default(now())
+  approvedAt      DateTime?
+}
+
+model Event {
+  id               String      @id @default(cuid())
+  slug             String      @unique
+  title            String
+  description      String?
+  imageUrl         String? // póster (Supabase Storage o URL scrapeada)
+  category         String // romería, festival, concierto, deporte…
+  startDate        DateTime
+  endDate          DateTime?
+  location         String // nombre del lugar
+  municipality     String
+  province         String // A Coruña | Lugo | Ourense | Pontevedra
+  lat              Float?
+  lng              Float?
+  source           EventSource @default(SCRAPED)
+  sourceUrl        String? // URL original de turismo.gal
+  isActive         Boolean     @default(true)
+  createdById      String?
+  createdBy        User?       @relation(fields: [createdById], references: [id])
+  // Config económica (solo admin la edita; valores por defecto al crear)
+  pricePerSeat      Decimal?   @db.Decimal(6, 2) // null = "precio por confirmar"
+  rrppCommissionPct Decimal    @default(15) @db.Decimal(4, 2)
+  minSeats          Int        @default(25)
+  busCapacity       Int        @default(55)
+  trips            Trip[]
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@index([startDate, province, category])
+  @@index([isActive, startDate])
+}
+
+// "Habilitación": evento × RRPP × ciudad de salida
+// Enlace público: /evento/[slug]?rrpp=CODE&salida=CIUDAD
+model Trip {
+  id         String       @id @default(cuid())
+  eventId    String
+  event      Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  rrppId     String
+  rrpp       RrppProfile  @relation(fields: [rrppId], references: [id])
+  originCity String // slug normalizado, p.ej. "mondariz"
+  originLat  Float?
+  originLng  Float?
+  status     TripStatus   @default(OPEN)
+  buses      Bus[]
+  payouts    Payout[]
+  createdAt  DateTime     @default(now())
+
+  @@unique([eventId, rrppId, originCity]) // un RRPP no duplica misma salida
+  @@index([rrppId, status])
+}
+
+// Bus concreto (1º, 2º, 3º… auto-abierto al llenarse el anterior)
+model Bus {
+  id            String       @id @default(cuid())
+  tripId        String
+  trip          Trip         @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  number        Int // 1, 2, 3…
+  capacity      Int
+  status        BusStatus    @default(OPEN)
+  // Rellenado por ADMIN al confirmar:
+  busCompany    String?
+  busPlate      String? // matrícula
+  driverName    String?
+  driverPhone   String?
+  driverEmail   String? // para enviar la lista de pasajeros
+  meetingPoint  String? // dirección exacta + lat/lng
+  departureTime DateTime?
+  returnTime    DateTime?
+  routeNotes    String?
+  bookings      Booking[]
+  confirmedAt   DateTime?
+
+  @@unique([tripId, number])
+  @@index([tripId, status])
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  busId           String
+  bus             Bus           @relation(fields: [busId], references: [id])
+  seats           Int           @default(1)
+  totalPrice      Decimal       @db.Decimal(8, 2)
+  status          BookingStatus @default(PENDING)
+  qrToken         String        @unique // token firmado para el QR
+  stripeSessionId String?       @unique
+  checkedInAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([userId, status])
+  @@index([busId, status])
+}
+
+// Comisiones a RRPP (post-evento, vía Stripe Connect)
+model Payout {
+  id               String       @id @default(cuid())
+  rrppId           String
+  rrpp             RrppProfile  @relation(fields: [rrppId], references: [id])
+  tripId           String?
+  trip             Trip?        @relation(fields: [tripId], references: [id])
+  amount           Decimal      @db.Decimal(8, 2)
+  stripeTransferId String?
+  status           PayoutStatus @default(PENDING)
+  createdAt        DateTime     @default(now())
+
+  @@index([rrppId, status])
+}
