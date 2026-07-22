@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { exec } from "child_process";
-import { promisify } from "util";
 import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { fetchAgendaEvents, syncAgendaEventsToDb } from "@/lib/scraper";
 
-const execAsync = promisify(exec);
+// Scraping completo: ~15 páginas en paralelo + sync por lote (cabe en 60s)
+export const maxDuration = 60;
 
 // POST /api/admin/scrape — ejecuta el scraper de la Agenda Cultural
-// (script one-off re-ejecutable; upsert por nid)
+// (re-ejecutable; upsert por nid: crea nuevos y actualiza existentes)
 export async function POST() {
   const user = await getCurrentUser();
   if (!user || user.role !== "ADMIN") {
@@ -14,25 +15,13 @@ export async function POST() {
   }
 
   try {
-    const { stdout, stderr } = await execAsync(
-      "npx tsx scripts/scrape-agenda.ts",
-      { cwd: process.cwd(), timeout: 300_000 }
-    );
+    const events = await fetchAgendaEvents();
+    const result = await syncAgendaEventsToDb(prisma, events);
 
-    // Extraer resumen del output
-    const total = stdout.match(/Total eventos únicos: (\d+)/)?.[1];
-    const db = stdout.match(/DB: (\d+) creados, (\d+) actualizados/);
-
-    return NextResponse.json({
-      ok: true,
-      total: total ? parseInt(total, 10) : null,
-      created: db ? parseInt(db[1], 10) : null,
-      updated: db ? parseInt(db[2], 10) : null,
-      log: stdout.slice(-500),
-      stderr: stderr.slice(-300),
-    });
+    return NextResponse.json({ ok: true, ...result });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Error ejecutando scraper";
+    console.error("Error en /api/admin/scrape:", e);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
