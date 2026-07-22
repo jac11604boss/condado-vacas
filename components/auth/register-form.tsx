@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -32,7 +32,7 @@ export function RegisterForm() {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<RegisterClientInput & Partial<RegisterRrppInput>>({
-    resolver: zodResolver(schema),
+    resolver: standardSchemaResolver(schema),
   });
 
   function switchRole(next: Role) {

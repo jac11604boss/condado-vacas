@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { rrppApplySchema, type RrppApplyInput } from "@/lib/validators/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,7 @@ export function RrppApplyForm() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<RrppApplyInput>({ resolver: zodResolver(rrppApplySchema) });
+  } = useForm<RrppApplyInput>({ resolver: standardSchemaResolver(rrppApplySchema) });
 
   async function onSubmit(values: RrppApplyInput) {
     setError(null);

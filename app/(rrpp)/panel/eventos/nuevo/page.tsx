@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { toast } from "sonner";
 import { createEventSchema, type CreateEventInput } from "@/lib/validators/trip";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,7 @@ export default function NuevoEventoPage() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<CreateEventInput>({
-    resolver: zodResolver(createEventSchema),
+    resolver: standardSchemaResolver(createEventSchema),
     defaultValues: { category: "fiesta-privada", province: "Pontevedra" },
   });
 

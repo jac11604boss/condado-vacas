@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { enableTripSchema, type EnableTripInput } from "@/lib/validators/trip";
 import { ShareLinkCard } from "./share-link-card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ export function EnableTripForm({ eventId }: { eventId: string }) {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<EnableTripInput>({ resolver: zodResolver(enableTripSchema) });
+  } = useForm<EnableTripInput>({ resolver: standardSchemaResolver(enableTripSchema) });
   register("eventId", { value: eventId });
 
   async function onSubmit(values: EnableTripInput) {

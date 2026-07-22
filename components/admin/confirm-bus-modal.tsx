@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { confirmBusSchema, type ConfirmBusInput } from "@/lib/validators/admin";
@@ -37,7 +37,7 @@ export function ConfirmBusModal({ tripId, busId, busNumber, open, onClose }: Con
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<ConfirmBusInput>({
-    resolver: zodResolver(confirmBusSchema),
+    resolver: standardSchemaResolver(confirmBusSchema),
     defaultValues: { busId },
   });
   register("busId", { value: busId });
