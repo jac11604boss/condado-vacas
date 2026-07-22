@@ -252,7 +252,7 @@ export async function syncAgendaEventsToDb(
       location: e.municipality,
       municipality: e.municipality,
       province: e.province,
-      source: "SCRAPED",
+      source: "SCRAPED" as const,
       sourceUrl: e.sourceUrl,
       isActive: e.isActive,
     };
