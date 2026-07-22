@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { markBookingPaid } from "@/lib/bookings";
 import type Stripe from "stripe";
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Sin firma" }, { status: 400 });
     }
     try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      event = getStripe().webhooks.constructEvent(body, signature, webhookSecret);
     } catch (err) {
       console.error("❌ Webhook firma inválida:", err);
       return NextResponse.json({ error: "Firma inválida" }, { status: 400 });

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { z } from "zod";
 
 const payoutSchema = z.object({
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const transfer = await stripe.transfers.create({
+    const transfer = await getStripe().transfers.create({
       amount: Math.round(amount * 100),
       currency: "eur",
       destination,

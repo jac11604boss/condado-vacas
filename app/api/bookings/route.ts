@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { generateQrToken } from "@/lib/qr";
 import { createBookingSchema } from "@/lib/validators/booking";
 
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
 
   // Stripe Checkout Session
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     mode: "payment",
     customer_email: user.email,
     line_items: [

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { markBookingPaid } from "@/lib/bookings";
 import { getCurrentUser } from "@/lib/auth";
@@ -28,7 +28,7 @@ export default async function ConfirmacionPage({
   let seats: number | null = null;
 
   try {
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const session = await getStripe().checkout.sessions.retrieve(sessionId);
     bookingId = session.metadata?.bookingId ?? null;
 
     if (!bookingId) {

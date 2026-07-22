@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { sendEmail } from "@/lib/resend";
 import { refundIssuedHtml } from "@/lib/email-templates";
 
@@ -46,11 +46,11 @@ export async function POST(
   for (const booking of bookings) {
     try {
       if (booking.stripeSessionId) {
-        const session = await stripe.checkout.sessions.retrieve(
+        const session = await getStripe().checkout.sessions.retrieve(
           booking.stripeSessionId
         );
         if (session.payment_intent) {
-          await stripe.refunds.create({
+          await getStripe().refunds.create({
             payment_intent: session.payment_intent as string,
           });
         }
