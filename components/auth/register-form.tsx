@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { toast } from "sonner";
@@ -20,7 +19,6 @@ import { cn } from "@/lib/utils";
 type Role = "CLIENT" | "RRPP";
 
 export function RegisterForm() {
-  const router = useRouter();
   const [role, setRole] = useState<Role>("CLIENT");
   const [error, setError] = useState<string | null>(null);
 
@@ -85,16 +83,12 @@ export function RegisterForm() {
     if (!data.session) {
       // Supabase pide confirmar email
       toast.info("Revisa tu email para confirmar la cuenta y luego entra.");
-      router.push("/login");
+      window.location.href = "/login";
       return;
     }
 
-    if (role === "RRPP") {
-      router.push("/rrpp/pendiente");
-    } else {
-      router.push("/eventos");
-    }
-    router.refresh();
+    // Recarga completa: cookies frescas y destino según rol
+    window.location.href = role === "RRPP" ? "/rrpp/pendiente" : "/eventos";
   }
 
   const fieldError = (name: string) =>

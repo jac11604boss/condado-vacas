@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { createClient } from "@/lib/supabase/client";
@@ -11,9 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "/";
+  const explicitNext = searchParams.get("next");
   const [error, setError] = useState<string | null>(null);
 
   const {
@@ -30,8 +29,25 @@ export function LoginForm() {
       setError("Email o contraseña incorrectos");
       return;
     }
-    router.push(next);
-    router.refresh();
+
+    // Redirección por rol (recarga completa: cookies frescas, sin carrera)
+    let target = explicitNext;
+    if (!target) {
+      try {
+        const me = await fetch("/api/auth/me").then((r) => r.json());
+        target =
+          me.role === "ADMIN"
+            ? "/admin"
+            : me.role === "RRPP" && me.rrppStatus === "APPROVED"
+              ? "/panel"
+              : me.role === "RRPP"
+                ? "/rrpp/pendiente"
+                : "/eventos";
+      } catch {
+        target = "/eventos";
+      }
+    }
+    window.location.href = target;
   }
 
   return (
