@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { loginSchema, type LoginInput } from "@/lib/validators/auth";
 import { Button } from "@/components/ui/button";
@@ -23,31 +24,40 @@ export function LoginForm() {
 
   async function onSubmit(values: LoginInput) {
     setError(null);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword(values);
-    if (error) {
-      setError("Email o contraseña incorrectos");
-      return;
-    }
-
-    // Redirección por rol (recarga completa: cookies frescas, sin carrera)
-    let target = explicitNext;
-    if (!target) {
-      try {
-        const me = await fetch("/api/auth/me").then((r) => r.json());
-        target =
-          me.role === "ADMIN"
-            ? "/admin"
-            : me.role === "RRPP" && me.rrppStatus === "APPROVED"
-              ? "/panel"
-              : me.role === "RRPP"
-                ? "/rrpp/pendiente"
-                : "/eventos";
-      } catch {
-        target = "/eventos";
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithPassword(values);
+      if (error) {
+        setError("Email o contraseña incorrectos");
+        return;
       }
+
+      toast.success("¡Sesión iniciada! Redirigiendo…");
+
+      // Redirección por rol (recarga completa: cookies frescas, sin carrera)
+      let target = explicitNext;
+      if (!target) {
+        try {
+          const res = await fetch("/api/auth/me", {
+            signal: AbortSignal.timeout(6000),
+          });
+          const me = await res.json();
+          target =
+            me.role === "ADMIN"
+              ? "/admin"
+              : me.role === "RRPP" && me.rrppStatus === "APPROVED"
+                ? "/panel"
+                : me.role === "RRPP"
+                  ? "/rrpp/pendiente"
+                  : "/eventos";
+        } catch {
+          target = "/eventos";
+        }
+      }
+      window.location.href = target;
+    } catch {
+      setError("Error de conexión. Inténtalo de nuevo.");
     }
-    window.location.href = target;
   }
 
   return (

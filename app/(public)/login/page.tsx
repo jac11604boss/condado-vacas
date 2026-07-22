@@ -6,6 +6,9 @@ import { Separator } from "@/components/ui/separator";
 
 export const metadata = { title: "Entrar" };
 
+// Página dinámica: evita HTML cacheado con JS antiguo tras deploys
+export const dynamic = "force-dynamic";
+
 export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
