@@ -39,6 +39,7 @@ npm run db:studio    # Prisma Studio
 - **Enlace RRPP**: `/evento/[slug]?rrpp=CODE&salida=CIUDAD` (parámetros separados).
 - **Zod** valida todos los bodies de API. **Server Components** para páginas públicas, React Query para datos vivos, Zustand solo para estado UI.
 - **Zod v4 + RHF**: usar `standardSchemaResolver` de `@hookform/resolvers/standard-schema` (NO `zodResolver`, incompatible con Zod v4 — fallaba todo con "Invalid input").
+- **Primitivos de formulario deben reenviar `ref`**: cualquier wrapper de Base UI/nativo usado con RHF `register()` necesita `React.forwardRef` (bug histórico: `Input` sin forwardRef → RHF no registraba campos → todos los formularios rechazaban datos válidos).
 - Variables de entorno documentadas en `.env.example` — mantenerlo actualizado al añadir integraciones.
 
 ## Prisma 7 (importante)
