@@ -49,7 +49,13 @@ npm run db:studio    # Prisma Studio
 
 ## Plan de implementación
 
-Ver fases en el plan aprobado. Estado actual: **FASE 10 (Pulido + Deploy) — MVP COMPLETO** ✅ README + docs/TESTING.md (4 flujos E2E), 404/error/loading personalizados, sitemap dinámico (257 eventos), robots.txt, OG dinámica por evento (`opengraph-image.tsx` con next/og), JSON-LD schema.org/Event, Mapbox lazy-loaded (bundle calendario 32→9KB), WebP, bundle analyzer (`ANALYZE=true npm run build`), vercel.json (build: `npx prisma generate && next build`).
+Ver fases en el plan aprobado. Estado actual: **MVP DESPLEGADO EN PRODUCCIÓN** 🚀
+- Repo: https://github.com/jac11604boss/condado-vacas
+- Prod: https://condado-vacas.vercel.app (verificado: páginas, DB, OG dinámica 200 image/png, APIs, sitemap)
+- Deploy: `npx vercel --prod` (CLI con token) o push a main si se conecta la integración GitHub.
+- Env vars prod: 15 configuradas vía `vercel env add` (sensitive).
+- `lib/stripe.ts` es LAZY (`getStripe()`) — necesario para el build de Vercel.
+- Pendiente manual: Supabase Site URL/redirects + Stripe webhook endpoint → `STRIPE_WEBHOOK_SECRET`.
 
 **Nota OG image:** la OG dinámica falla en dev Windows por el `+` en la ruta del proyecto (bug conocido de @vercel/og al cargar la fuente: `ERR_INVALID_URL`). En Vercel (Linux) funciona — verificar tras deploy. Si se quiere probar en local, copiar el proyecto a una ruta sin caracteres especiales.
 
