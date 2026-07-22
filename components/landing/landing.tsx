@@ -55,7 +55,13 @@ const rrppPerks = [
   { icon: Sparkles, text: "Tú traes la gente, nosotros ponemos el bus" },
 ];
 
-export function Landing({ trips }: { trips: TripCard[] }) {
+export function Landing({
+  trips,
+  session,
+}: {
+  trips: TripCard[];
+  session: { name: string | null; href: string } | null;
+}) {
   return (
     <div className="min-h-screen overflow-x-hidden bg-background">
       {/* Navbar */}
@@ -74,12 +80,18 @@ export function Landing({ trips }: { trips: TripCard[] }) {
             >
               Eventos
             </Link>
-            <Link
-              href="/login"
-              className={cn(buttonVariants({ variant: "outline" }), "border-white/15")}
-            >
-              Entrar
-            </Link>
+            {session ? (
+              <Link href={session.href} className={cn(buttonVariants())}>
+                {session.name ? `Hola, ${session.name.split(" ")[0]}` : "Mi cuenta"}
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className={cn(buttonVariants({ variant: "outline" }), "border-white/15")}
+              >
+                Entrar
+              </Link>
+            )}
           </div>
         </nav>
       </header>
