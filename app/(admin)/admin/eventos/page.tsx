@@ -173,10 +173,14 @@ export default function AdminEventosPage() {
               data?.events.map((e) => (
                 <TableRow key={e.id}>
                   <TableCell className="max-w-56">
-                    <Link href={`/admin/eventos/${e.id}`} className="font-medium hover:text-brand">
+                    <Link
+                      href={`/admin/eventos/${e.id}`}
+                      className="block truncate font-medium hover:text-brand"
+                      title={e.title}
+                    >
                       {e.title}
                     </Link>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="truncate text-xs text-muted-foreground">
                       {e.category} · {e.source === "SCRAPED" ? "agenda" : "propio"}
                       {e.tripsCount > 0 && ` · ${e.tripsCount} viaje(s)`}
                     </p>
